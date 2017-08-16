@@ -51,3 +51,20 @@ final class Article: Model {
         return row
     }
 }
+
+extension Article: Preparation {
+    static func prepare(_ database: Database) throws {
+        try database.create(self) { (builder: Creator) in
+            builder.id()
+            builder.string(Article.title_key)
+            builder.string(Article.profileImageURL_key)
+            builder.string(Article.url_key)
+            //            builder.string(Article.stockCount_key)
+        }
+    }
+    
+    static func revert(_ database: Database) throws {
+        try database.delete(self)
+    }
+}
+
