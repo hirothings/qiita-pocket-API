@@ -68,3 +68,33 @@ extension Article: Preparation {
     }
 }
 
+extension Article: JSONConvertible {
+    convenience init(json: JSON) throws {
+        let user = try User(node: json["user"])
+        try self.init(
+            title: json.get(Article.title_key),
+            profileImageURL: user.profileImageURL,
+            url: json.get(Article.url_key)
+            //            stockCount: json.get(Article.stockCount_key)
+        )
+    }
+    
+    func makeJSON() throws -> JSON {
+        var json = JSON()
+        try json.set(Article.title_key, title)
+        try json.set(Article.profileImageURL_key, profileImageURL)
+        try json.set(Article.url_key, url)
+        //        try json.set(Article.stockCount_key, stockCount)
+        return json
+    }
+}
+
+
+final class User: NodeInitializable {
+    var profileImageURL: String = ""
+    
+    init(node: Node) throws {
+        self.profileImageURL = try node.get(Article.profileImageURL_key)
+    }
+}
+
