@@ -92,6 +92,12 @@
       "version": "2.0.0"
     },
     {
+      "package": "RxSwift",
+      "reason": null,
+      "repositoryURL": "https://github.com/ReactiveX/RxSwift.git",
+      "version": "3.6.1"
+    },
+    {
       "package": "SQLite",
       "reason": null,
       "repositoryURL": "https://github.com/vapor/sqlite.git",
