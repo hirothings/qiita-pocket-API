@@ -15,6 +15,8 @@ final class ArticleController {
     let drop: Droplet
     var articles: [Article] = []
     
+    private var bag: DisposeBag! = DisposeBag()
+    
     init(droplet: Droplet) {
         drop = droplet
     }
@@ -25,7 +27,21 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        // Qiitaの投稿を生成
+        let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
+        let maxPage: Int = 10
+        
+        interval
+            .subscribe(onNext: {
+                let page = $0 + 1
+                print("page: \(page)")
+                self.fetchArticles(page: page, perPage: 1)
+                if page == maxPage {
+                    dump(self.articles)
+                    print("complete")
+                    self.bag = nil
+                }
+            })
+            .disposed(by: bag)
         
         return "success"
     }
@@ -33,19 +49,21 @@ final class ArticleController {
     
     // MARK: - private
     
-    private func fedtchArticles(page: Int, perPage: Int) throws -> [Article] {
-        let response: Response = try drop.client.get("https://qiita.com/api/v2/items", query: [
+    private func fetchArticles(page: Int, perPage: Int) {
+        let response: Response = try! drop.client.get("https://qiita.com/api/v2/items", query: [
             "page": page,
             "per_page": perPage
             ])
+        print("-- response --")
+        print(response.description)
+        print("-- /response --")
         guard let jsonArray = response.json?.array else {
-            throw Abort.badRequest
+            return
         }
         for json in jsonArray {
-            let article = try Article(json: json)
+            let article = try! Article(json: json)
             articles.append(article)
         }
-        return articles
     }
 }
 
