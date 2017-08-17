@@ -1,18 +1,11 @@
 import Vapor
+import RxSwift
 
 extension Droplet {
     func setupRoutes() throws {
-
-        get("articles/new") { req in
-            // Qiitaの投稿を取得
-            return "success"
-        }
+        let articles = ArticleController(droplet: self)
         
-        get("articles") { req in
-            let articles = try Article.makeQuery().all()
-            var json = JSON()
-            try json.set("articles", articles)
-            return json
-        }
+        get("articles", handler: articles.index)
+        post("articles", handler: articles.create)
     }
 }
