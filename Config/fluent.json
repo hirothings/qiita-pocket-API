@@ -20,7 +20,7 @@
     
     "//": "If true, foreign keys will automatically be added",
     "//": "to any `builder.foreignId(...)` calls.",
-    "autoForeignKeys": true,
+    "autoForeignKeys": false,
     
     "//": "Key to specify page number for paginated responses",
     "//": "e.g., `?page=2` ",
