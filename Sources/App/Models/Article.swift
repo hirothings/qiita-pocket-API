@@ -13,33 +13,36 @@ import HTTP
 final class Article: Model {
     var storage: Storage = Storage()
     
-    var title: String
-    var profileImageURL: String
-    var url: String
-    //    var stockCount: Int
+    static let idType: IdentifierType = .int
+    let title: String
+    let profileImageURL: String
+    let url: String
+    var stockCount: Int = 0
+    var tags: Children<Article, Tag> {
+        return children()
+    }
     
     static let title_key: String = "title"
     static let profileImageURL_key: String = "profile_image_url"
     static let url_key: String = "url"
-    //    static let stockCount_key: String = "stock_count"
+    static let stockCount_key: String = "stock_count"
+    static let tags_key: String = "tags"
     
     init(
         title: String,
         profileImageURL: String,
         url: String
-        //        stockCount: Int
         ) {
         self.title = title
         self.profileImageURL = profileImageURL
         self.url = url
-        //        self.stockCount = stockCount
     }
     
     init(row: Row) throws {
         self.title = try row.get(Article.title_key)
         self.profileImageURL = try row.get(Article.profileImageURL_key)
         self.url = try row.get(Article.url_key)
-        //        self.stockCount = try row.get(Article.stockCount_key)
+        self.stockCount = try row.get(Article.stockCount_key)
     }
     
     func makeRow() throws -> Row {
@@ -47,7 +50,7 @@ final class Article: Model {
         try row.set(Article.title_key, title)
         try row.set(Article.profileImageURL_key, profileImageURL)
         try row.set(Article.url_key, url)
-        //        try row.set(Article.stockCount_key, stockCount)
+        try row.set(Article.stockCount_key, stockCount)
         return row
     }
 }
@@ -59,7 +62,7 @@ extension Article: Preparation {
             builder.string(Article.title_key)
             builder.string(Article.profileImageURL_key)
             builder.string(Article.url_key)
-            //            builder.string(Article.stockCount_key)
+            builder.string(Article.stockCount_key)
         }
     }
     
@@ -75,7 +78,6 @@ extension Article: JSONConvertible {
             title: json.get(Article.title_key),
             profileImageURL: user.profileImageURL,
             url: json.get(Article.url_key)
-            //            stockCount: json.get(Article.stockCount_key)
         )
     }
     
@@ -84,14 +86,15 @@ extension Article: JSONConvertible {
         try json.set(Article.title_key, title)
         try json.set(Article.profileImageURL_key, profileImageURL)
         try json.set(Article.url_key, url)
-        //        try json.set(Article.stockCount_key, stockCount)
+        try json.set(Article.tags_key, try tags.all().flatMap { t in t.name } )
+        try json.set(Article.stockCount_key, stockCount)
         return json
     }
 }
 
 
 final class User: NodeInitializable {
-    var profileImageURL: String = ""
+    var profileImageURL: String
     
     init(node: Node) throws {
         self.profileImageURL = try node.get(Article.profileImageURL_key)

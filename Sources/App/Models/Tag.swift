@@ -14,7 +14,9 @@ final class Tag: Model {
     let storage = Storage()
     let name: String
     let articleID: Identifier
+    
     static let name_key: String = "name"
+    static let articleID_key = "article_id"
     
     init(name: String, articleID: Identifier) {
         self.name = name
@@ -23,13 +25,13 @@ final class Tag: Model {
     
     init(row: Row) throws {
         name = try row.get(Tag.name_key)
-        articleID = try row.get(Article.articleID_key)
+        articleID = try row.get(Tag.articleID_key)
     }
     
     func makeRow() throws -> Row {
         var row = Row()
         try row.set(Tag.name_key, name)
-        try row.set(Article.articleID_key, articleID)
+        try row.set(Tag.articleID_key, articleID)
         return row
     }
 }
@@ -38,9 +40,9 @@ extension Tag: Preparation {
     static func prepare(_ database: Database) throws {
         try database.create(self) { builder in
             builder.id()
-            builder.foreignKey(Article.articleID_key, references: Article.idKey, on: Article.self)
+            builder.foreignKey(Tag.articleID_key, references: Article.idKey, on: Article.self)
             builder.string(Tag.name_key)
-            builder.string(Article.articleID_key)
+            builder.string(Tag.articleID_key)
         }
     }
     
