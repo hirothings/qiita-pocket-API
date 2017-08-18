@@ -28,7 +28,7 @@ final class ArticleController {
     
     func create(_ req: Request) throws -> ResponseRepresentable {
         let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
-        let maxPage: Int = 10
+        let maxPage: Int = 2
         
         interval
             .subscribe(onNext: {
@@ -61,8 +61,20 @@ final class ArticleController {
             return
         }
         for json in jsonArray {
-            let article = try! Article(json: json)
-            articles.append(article)
+            saveEntities(json)
+        }
+    }
+    
+    private func saveEntities(_ json: JSON) {
+        let article = try! Article(json: json)
+        try! article.save()
+        guard let tags = json["tags"]?.array else {
+            return
+        }
+        tags.forEach { t in
+            let name: String = try! t.get("name")
+            let tag = Tag(name: name, articleID: article.id!)
+            try! tag.save()
         }
     }
 }
