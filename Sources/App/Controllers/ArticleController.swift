@@ -22,9 +22,12 @@ final class ArticleController {
         drop = droplet
     }
     
-
     func index(_ req: Request) throws -> ResponseRepresentable {
-        return try Article.all().makeJSON()
+        guard let period = req.query?["period"]?.string else {
+            throw Abort.badRequest
+        }
+        let tag = req.query?["tag"]?.string ?? ""
+        return "request: \(period), \(tag)"
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
