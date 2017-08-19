@@ -14,6 +14,7 @@ final class Article: Model {
     var storage: Storage = Storage()
     
     static let idType: IdentifierType = .int
+    let itemID: String
     let title: String
     let profileImageURL: String
     let url: String
@@ -23,6 +24,7 @@ final class Article: Model {
     }
     
     static let title_key: String = "title"
+    static let itemID_key: String = "item_id"
     static let profileImageURL_key: String = "profile_image_url"
     static let url_key: String = "url"
     static let stockCount_key: String = "stock_count"
@@ -30,16 +32,19 @@ final class Article: Model {
     
     init(
         title: String,
+        itemID: String,
         profileImageURL: String,
         url: String
         ) {
         self.title = title
+        self.itemID = itemID
         self.profileImageURL = profileImageURL
         self.url = url
     }
     
     init(row: Row) throws {
         self.title = try row.get(Article.title_key)
+        self.itemID = try row.get(Article.itemID_key)
         self.profileImageURL = try row.get(Article.profileImageURL_key)
         self.url = try row.get(Article.url_key)
         self.stockCount = try row.get(Article.stockCount_key)
@@ -48,6 +53,7 @@ final class Article: Model {
     func makeRow() throws -> Row {
         var row = Row()
         try row.set(Article.title_key, title)
+        try row.set(Article.itemID_key, itemID)
         try row.set(Article.profileImageURL_key, profileImageURL)
         try row.set(Article.url_key, url)
         try row.set(Article.stockCount_key, stockCount)
@@ -60,6 +66,7 @@ extension Article: Preparation {
         try database.create(self) { (builder: Creator) in
             builder.id()
             builder.string(Article.title_key)
+            builder.string(Article.itemID_key)
             builder.string(Article.profileImageURL_key)
             builder.string(Article.url_key)
             builder.string(Article.stockCount_key)
@@ -76,6 +83,7 @@ extension Article: JSONConvertible {
         let user = try User(node: json["user"])
         try self.init(
             title: json.get(Article.title_key),
+            itemID: json.get("id"),
             profileImageURL: user.profileImageURL,
             url: json.get(Article.url_key)
         )
