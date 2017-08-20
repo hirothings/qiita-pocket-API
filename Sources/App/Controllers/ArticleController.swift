@@ -9,6 +9,13 @@
 import Vapor
 import HTTP
 import RxSwift
+import FluentProvider
+import Foundation
+
+enum Period: String {
+    case week
+    case month
+}
 
 final class ArticleController {
     
@@ -23,16 +30,44 @@ final class ArticleController {
     }
     
     func index(_ req: Request) throws -> ResponseRepresentable {
-        guard let period = req.query?["period"]?.string else {
+        guard let _period = req.query?["period"]?.string, let period = Period(rawValue: _period) else {
             throw Abort.badRequest
         }
-        let tag = req.query?["tag"]?.string ?? ""
-        return "request: \(period), \(tag)"
+        var articles: Query<Article> = try searchArticles(within: period)
+        if let tag = req.query?["tag"]?.string {
+            return try articles.all().makeJSON()
+        }
+        else {
+            return try articles.all().makeJSON()
+        }
+    }
+    
+    func searchArticles(within period: Period) throws -> Query<Article> {
+        var since: Date
+        let calender = Calendar.current
+        switch period {
+        case .week:
+            since = Date(timeInterval: -60*60*24*7, since: Date())
+        case .month:
+            since = calender.date(byAdding: .month, value: -1, to: Date())!
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        let sinceStr = formatter.string(from: since)
+        let now = Date()
+        let nowStr = formatter.string(from: now)
+        
+        let articles = try Article
+            .makeQuery()
+            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'")
+            .sort(Article.stockCount_key, .descending)
+
+        return articles
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
         let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
-        let maxPage: Int = 2
+        let maxPage: Int = 3
         
         interval
             .subscribe(onNext: {
@@ -56,7 +91,8 @@ final class ArticleController {
     private func fetchArticles(page: Int, perPage: Int) {
         let response: Response = try! drop.client.get(baseURL + "items", query: [
             "page": page,
-            "per_page": perPage
+            "per_page": perPage,
+            "query": "user:hirothings"
         ])
         
         guard let jsonArray = response.json?.array else {
