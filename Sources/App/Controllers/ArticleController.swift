@@ -70,7 +70,7 @@ final class ArticleController {
         let response: Response = try! drop.client.get(baseURL + "items", query: [
             "page": page,
             "per_page": perPage,
-            "query": "user:hirothings"
+            "query": "user:hirothings" // TODO: 後でパラメータ削除
         ], [
             "Authorization": "Bearer e29beeba132eadc54309032c17d3a50eff9ada51" // TODO: 後でgit管理外に移す
         ])
@@ -139,7 +139,7 @@ final class ArticleController {
         
         let articles = try Article
             .makeQuery()
-            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'")
+            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'") // TODO: 後で期間直書き修正
             .sort(Article.stockCount_key, .descending)
         
         return articles
