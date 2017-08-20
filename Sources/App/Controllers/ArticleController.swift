@@ -21,6 +21,8 @@ final class ArticleController {
     
     let drop: Droplet
     let baseURL = "https://qiita.com/api/v2/"
+    let maxPage: Int = 3
+    let periodSec: RxTimeInterval = 5.0
     var articles: [Article] = []
     
     private var bag: DisposeBag! = DisposeBag()
@@ -36,24 +38,22 @@ final class ArticleController {
         var articles: Query<Article> = try searchArticles(within: period)
         if let tag = req.query?["tag"]?.string {
             articles = try searchArticles(with: tag, articles: articles)
-            return try articles.all().makeJSON()
         }
-        else {
-            return try articles.all().makeJSON()
-        }
+        return try articles
+            .sort(Article.stockCount_key, .descending)
+            .all()
+            .makeJSON()
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
-        let maxPage: Int = 3
+        let interval = Observable<Int>.interval(periodSec, scheduler: SerialDispatchQueueScheduler(qos: .default))
         
         interval
             .subscribe(onNext: {
                 let page = $0 + 1
                 print("page: \(page)")
-                self.fetchArticles(page: page, perPage: 1)
-                if page == maxPage {
-                    dump(self.articles)
+                self.fetchArticles(page: page, perPage: 100)
+                if page == self.maxPage {
                     print("complete")
                     self.bag = nil
                 }
@@ -69,10 +69,9 @@ final class ArticleController {
     private func fetchArticles(page: Int, perPage: Int) {
         let response: Response = try! drop.client.get(baseURL + "items", query: [
             "page": page,
-            "per_page": perPage,
-            "query": "user:hirothings" // TODO: 後でパラメータ削除
+            "per_page": perPage
         ], [
-            "Authorization": "Bearer e29beeba132eadc54309032c17d3a50eff9ada51" // TODO: 後でgit管理外に移す
+            "Authorization": "Bearer f2992b1d5db0954c2537df5ace511b727c9e05ad" // TODO: 後でgit管理外に移す
         ])
         
         guard let jsonArray = response.json?.array else {
@@ -97,6 +96,8 @@ final class ArticleController {
         let response: Response = try! drop.client.get(baseURL + "items/\(article.itemID)/stockers", query: [
             "page": page,
             "per_page": perPage
+        ], [
+            "Authorization": "Bearer f2992b1d5db0954c2537df5ace511b727c9e05ad" // TODO: 後でgit管理外に移す
         ])
         
         print("-- response --")
@@ -137,12 +138,9 @@ final class ArticleController {
         let now = Date()
         let nowStr = formatter.string(from: now)
         
-        let articles = try Article
+        return try Article
             .makeQuery()
-            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'") // TODO: 後で期間直書き修正
-            .sort(Article.stockCount_key, .descending)
-        
-        return articles
+            .filter(raw: "published_at between '\(sinceStr)' and '\(nowStr)'")
     }
     
     private func searchArticles(with tag: String, articles: Query<Article>) throws -> Query<Article> {
