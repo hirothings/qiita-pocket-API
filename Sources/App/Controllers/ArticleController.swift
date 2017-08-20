@@ -21,7 +21,7 @@ final class ArticleController {
     
     let drop: Droplet
     let baseURL = "https://qiita.com/api/v2/"
-    let maxPage: Int = 3
+    let maxPage: Int = 1
     let periodSec: RxTimeInterval = 5.0
     var articles: [Article] = []
     
@@ -56,7 +56,36 @@ final class ArticleController {
                 if page == self.maxPage {
                     print("complete")
                     self.bag = nil
+                    self.bag = DisposeBag()
                 }
+            })
+            .disposed(by: bag)
+        
+        return "success"
+    }
+    
+    func stockers(_ req: Request) throws -> ResponseRepresentable {
+        let interval = Observable<Int>.interval(periodSec, scheduler: SerialDispatchQueueScheduler(qos: .default))
+        let articles = try Article.all()
+        
+        interval
+            .subscribe(onNext: { index in
+                let a: Article? = index < articles.count ? articles[index] : nil
+                guard let article = a else {
+                    self.bag = nil
+                    self.bag = DisposeBag()
+                    return
+                }
+                var page = 1
+                var stockCount = 0
+                while true {
+                    let count = self.fetchStockCount(page: page, perPage: 100, article: article)
+                    if count == 0 { break }
+                    stockCount += count
+                    page += 1
+                }
+                article.stockCount = stockCount
+                try! article.save()
             })
             .disposed(by: bag)
         
@@ -79,20 +108,11 @@ final class ArticleController {
         }
         for json in jsonArray {
             let article = try! Article(json: json)
-            var page = 1
-            var stockCount = 0
-            while true {
-                let tuple = fetchStockCount(page: page, perPage: 100, article: article)
-                stockCount += tuple.count
-                page += 1
-                if !tuple.hasNextPage { break }
-            }
-            article.stockCount = stockCount
             saveEntities(article, json: json)
         }
     }
     
-    private func fetchStockCount(page: Int, perPage: Int, article: Article) -> (count: Int, hasNextPage: Bool) {
+    private func fetchStockCount(page: Int, perPage: Int, article: Article) -> Int {
         let response: Response = try! drop.client.get(baseURL + "items/\(article.itemID)/stockers", query: [
             "page": page,
             "per_page": perPage
@@ -105,10 +125,9 @@ final class ArticleController {
         print("-- /response --")
         
         guard let json = response.json?.array else {
-            return (0, false)
+            return 0
         }
-        let linkHeader = response.headers["Link"]!
-        return (json.count, linkHeader.contains("rel=\"next\""))
+        return json.count
     }
     
     private func saveEntities(_ article: Article, json: JSON) {
