@@ -15,6 +15,11 @@ final class Tag: Model {
     let name: String
     let articleID: Identifier
     
+    // parent relation
+    var article: Parent<Tag, Article> {
+        return parent(id: articleID)
+    }
+    
     static let name_key: String = "name"
     static let articleID_key = "article_id"
     
@@ -42,7 +47,7 @@ extension Tag: Preparation {
             builder.id()
             builder.foreignKey(Tag.articleID_key, references: Article.idKey, on: Article.self)
             builder.string(Tag.name_key)
-            builder.string(Tag.articleID_key)
+            builder.parent(Article.self)
         }
     }
     
