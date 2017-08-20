@@ -35,6 +35,7 @@ final class ArticleController {
         }
         var articles: Query<Article> = try searchArticles(within: period)
         if let tag = req.query?["tag"]?.string {
+            articles = try searchArticles(with: tag, articles: articles)
             return try articles.all().makeJSON()
         }
         else {
@@ -64,6 +65,14 @@ final class ArticleController {
 
         return articles
     }
+    
+    func searchArticles(with tag: String, articles: Query<Article>) throws -> Query<Article> {
+        return try articles
+            .makeQuery()
+            .join(Tag.self) // 子ModelのTagとJoin
+            .filter(raw: "upper(`tags`.`name`) = upper('\(tag)')") // 大文字・個別の区別をなくすためにsqliteのupper関数を使う
+    }
+    
     
     func create(_ req: Request) throws -> ResponseRepresentable {
         let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
