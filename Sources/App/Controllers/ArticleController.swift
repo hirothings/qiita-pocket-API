@@ -93,6 +93,8 @@ final class ArticleController {
             "page": page,
             "per_page": perPage,
             "query": "user:hirothings"
+        ], [
+            "Authorization": "Bearer e29beeba132eadc54309032c17d3a50eff9ada51" // TODO: 後でgit管理外に移す
         ])
         
         guard let jsonArray = response.json?.array else {
