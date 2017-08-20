@@ -43,37 +43,6 @@ final class ArticleController {
         }
     }
     
-    func searchArticles(within period: Period) throws -> Query<Article> {
-        var since: Date
-        let calender = Calendar.current
-        switch period {
-        case .week:
-            since = Date(timeInterval: -60*60*24*7, since: Date())
-        case .month:
-            since = calender.date(byAdding: .month, value: -1, to: Date())!
-        }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
-        let sinceStr = formatter.string(from: since)
-        let now = Date()
-        let nowStr = formatter.string(from: now)
-        
-        let articles = try Article
-            .makeQuery()
-            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'")
-            .sort(Article.stockCount_key, .descending)
-
-        return articles
-    }
-    
-    func searchArticles(with tag: String, articles: Query<Article>) throws -> Query<Article> {
-        return try articles
-            .makeQuery()
-            .join(Tag.self) // 子ModelのTagとJoin
-            .filter(raw: "upper(`tags`.`name`) = upper('\(tag)')") // 大文字・個別の区別をなくすためにsqliteのupper関数を使う
-    }
-    
-    
     func create(_ req: Request) throws -> ResponseRepresentable {
         let interval = Observable<Int>.interval(3, scheduler: SerialDispatchQueueScheduler(qos: .default))
         let maxPage: Int = 3
@@ -151,6 +120,36 @@ final class ArticleController {
             let tag = Tag(name: name, articleID: article.id!)
             try! tag.save()
         }
+    }
+    
+    private func searchArticles(within period: Period) throws -> Query<Article> {
+        var since: Date
+        let calender = Calendar.current
+        switch period {
+        case .week:
+            since = Date(timeInterval: -60*60*24*7, since: Date())
+        case .month:
+            since = calender.date(byAdding: .month, value: -1, to: Date())!
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        let sinceStr = formatter.string(from: since)
+        let now = Date()
+        let nowStr = formatter.string(from: now)
+        
+        let articles = try Article
+            .makeQuery()
+            .filter(raw: "published_at between '2016-01-20T10:21:06+09:00' and '\(nowStr)'")
+            .sort(Article.stockCount_key, .descending)
+        
+        return articles
+    }
+    
+    private func searchArticles(with tag: String, articles: Query<Article>) throws -> Query<Article> {
+        return try articles
+            .makeQuery()
+            .join(Tag.self) // 子ModelのTagとJoin
+            .filter(raw: "upper(`tags`.`name`) = upper('\(tag)')") // 大文字・個別の区別をなくすためにsqliteのupper関数を使う
     }
 }
 
