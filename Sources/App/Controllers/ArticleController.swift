@@ -114,7 +114,7 @@ final class ArticleController {
     }
     
     private func fetchStockCount(page: Int, perPage: Int, article: Article) -> (count: Int, hasNextPage: Bool) {
-        let response: Response = try! drop.client.get(baseURL + "items/\(article.itemID))/stockers", query: [
+        let response: Response = try! drop.client.get(baseURL + "items/\(article.itemID)/stockers", query: [
             "page": page,
             "per_page": perPage
         ])
