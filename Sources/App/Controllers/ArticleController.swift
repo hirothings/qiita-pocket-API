@@ -11,6 +11,7 @@ import HTTP
 import RxSwift
 import FluentProvider
 import Foundation
+import Jobs
 
 enum Period: String {
     case week
@@ -89,6 +90,14 @@ final class ArticleController {
             })
             .disposed(by: bag)
         
+        return "success"
+    }
+    
+    func jobs(_ req: Request) throws -> ResponseRepresentable {
+        Jobs.add(interval: .seconds(2)) {
+            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), profileImageURL: "test", url: "test")
+            try! article.save()
+        }
         return "success"
     }
     
