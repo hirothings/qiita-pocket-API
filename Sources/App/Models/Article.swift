@@ -20,7 +20,7 @@ final class Article: Model {
     let publishedAt: Date
     let profileImageURL: String
     let url: String
-    var stockCount: Int = 0
+    var likesCount: Int = 0
     var tags: Children<Article, Tag> {
         return children()
     }
@@ -30,7 +30,7 @@ final class Article: Model {
     static let publishedAt_key: String = "published_at"
     static let profileImageURL_key: String = "profile_image_url"
     static let url_key: String = "url"
-    static let stockCount_key: String = "stock_count"
+    static let likesCount_key: String = "likes_count"
     static let tags_key: String = "tags"
     
     init(
@@ -38,13 +38,15 @@ final class Article: Model {
         itemID: String,
         publishedAt: Date,
         profileImageURL: String,
-        url: String
+        url: String,
+        likesCount: Int
         ) {
         self.title = title
         self.itemID = itemID
         self.publishedAt = publishedAt
         self.profileImageURL = profileImageURL
         self.url = url
+        self.likesCount = likesCount
     }
     
     init(row: Row) throws {
@@ -53,7 +55,7 @@ final class Article: Model {
         self.publishedAt = try row.get(Article.publishedAt_key)
         self.profileImageURL = try row.get(Article.profileImageURL_key)
         self.url = try row.get(Article.url_key)
-        self.stockCount = try row.get(Article.stockCount_key)
+        self.likesCount = try row.get(Article.likesCount_key)
     }
     
     func makeRow() throws -> Row {
@@ -63,7 +65,7 @@ final class Article: Model {
         try row.set(Article.publishedAt_key, publishedAt)
         try row.set(Article.profileImageURL_key, profileImageURL)
         try row.set(Article.url_key, url)
-        try row.set(Article.stockCount_key, stockCount)
+        try row.set(Article.likesCount_key, likesCount)
         return row
     }
 }
@@ -77,7 +79,7 @@ extension Article: Preparation {
             builder.string(Article.publishedAt_key)
             builder.string(Article.profileImageURL_key)
             builder.string(Article.url_key)
-            builder.string(Article.stockCount_key)
+            builder.int(Article.likesCount_key)
         }
     }
     
@@ -101,7 +103,8 @@ extension Article: JSONConvertible {
             itemID: json.get("id"),
             publishedAt: date,
             profileImageURL: user.profileImageURL,
-            url: json.get(Article.url_key)
+            url: json.get(Article.url_key),
+            likesCount: json.get(Article.likesCount_key)
         )
     }
     
@@ -112,7 +115,7 @@ extension Article: JSONConvertible {
         try json.set(Article.profileImageURL_key, profileImageURL)
         try json.set(Article.url_key, url)
         try json.set(Article.tags_key, try tags.all().flatMap { t in t.name } )
-        try json.set(Article.stockCount_key, stockCount)
+        try json.set(Article.likesCount_key, likesCount)
         return json
     }
 }

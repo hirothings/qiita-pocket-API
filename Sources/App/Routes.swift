@@ -7,7 +7,6 @@ extension Droplet {
         
         get("articles", handler: articles.index)
         post("articles", handler: articles.create)
-        post("stockers", handler: articles.stockers)
         get("jobs", handler: articles.jobs)
     }
 }

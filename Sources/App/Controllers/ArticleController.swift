@@ -41,7 +41,7 @@ final class ArticleController {
             articles = try searchArticles(with: tag, articles: articles)
         }
         return try articles
-            .sort(Article.stockCount_key, .descending)
+            .sort(Article.likesCount_key, .descending)
             .all()
             .makeJSON()
     }
@@ -65,37 +65,9 @@ final class ArticleController {
         return "success"
     }
     
-    func stockers(_ req: Request) throws -> ResponseRepresentable {
-        let interval = Observable<Int>.interval(periodSec, scheduler: SerialDispatchQueueScheduler(qos: .default))
-        let articles = try Article.all()
-        
-        interval
-            .subscribe(onNext: { index in
-                let a: Article? = index < articles.count ? articles[index] : nil
-                guard let article = a else {
-                    self.bag = nil
-                    self.bag = DisposeBag()
-                    return
-                }
-                var page = 1
-                var stockCount = 0
-                while true {
-                    let count = self.fetchStockCount(page: page, perPage: 100, article: article)
-                    if count == 0 { break }
-                    stockCount += count
-                    page += 1
-                }
-                article.stockCount = stockCount
-                try! article.save()
-            })
-            .disposed(by: bag)
-        
-        return "success"
-    }
-    
     func jobs(_ req: Request) throws -> ResponseRepresentable {
         Jobs.add(interval: .seconds(2)) {
-            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), profileImageURL: "test", url: "test")
+            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), profileImageURL: "test", url: "test", likesCount: 1)
             try! article.save()
         }
         return "success"
@@ -119,24 +91,6 @@ final class ArticleController {
             let article = try! Article(json: json)
             saveEntities(article, json: json)
         }
-    }
-    
-    private func fetchStockCount(page: Int, perPage: Int, article: Article) -> Int {
-        let response: Response = try! drop.client.get(baseURL + "items/\(article.itemID)/stockers", query: [
-            "page": page,
-            "per_page": perPage
-        ], [
-            "Authorization": "Bearer f2992b1d5db0954c2537df5ace511b727c9e05ad" // TODO: 後でgit管理外に移す
-        ])
-        
-        print("-- response --")
-        print(response.description)
-        print("-- /response --")
-        
-        guard let json = response.json?.array else {
-            return 0
-        }
-        return json.count
     }
     
     private func saveEntities(_ article: Article, json: JSON) {
