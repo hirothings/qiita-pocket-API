@@ -21,5 +21,6 @@ extension Config {
         preparations.append(Post.self)
         preparations.append(Article.self)
         preparations.append(Tag.self)
+        preparations.append(User.self)
     }
 }
