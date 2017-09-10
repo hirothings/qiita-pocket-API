@@ -18,9 +18,11 @@ final class Article: Model {
     let title: String
     let itemID: String
     let publishedAt: Date
-    let profileImageURL: String
     let url: String
     var likesCount: Int = 0
+    var user: Children<Article, User> {
+        return children()
+    }
     var tags: Children<Article, Tag> {
         return children()
     }
@@ -28,23 +30,21 @@ final class Article: Model {
     static let title_key: String = "title"
     static let itemID_key: String = "item_id"
     static let publishedAt_key: String = "published_at"
-    static let profileImageURL_key: String = "profile_image_url"
     static let url_key: String = "url"
     static let likesCount_key: String = "likes_count"
+    static let user_key: String = "user"
     static let tags_key: String = "tags"
     
     init(
         title: String,
         itemID: String,
         publishedAt: Date,
-        profileImageURL: String,
         url: String,
         likesCount: Int
         ) {
         self.title = title
         self.itemID = itemID
         self.publishedAt = publishedAt
-        self.profileImageURL = profileImageURL
         self.url = url
         self.likesCount = likesCount
     }
@@ -53,7 +53,6 @@ final class Article: Model {
         self.title = try row.get(Article.title_key)
         self.itemID = try row.get(Article.itemID_key)
         self.publishedAt = try row.get(Article.publishedAt_key)
-        self.profileImageURL = try row.get(Article.profileImageURL_key)
         self.url = try row.get(Article.url_key)
         self.likesCount = try row.get(Article.likesCount_key)
     }
@@ -63,7 +62,6 @@ final class Article: Model {
         try row.set(Article.title_key, title)
         try row.set(Article.itemID_key, itemID)
         try row.set(Article.publishedAt_key, publishedAt)
-        try row.set(Article.profileImageURL_key, profileImageURL)
         try row.set(Article.url_key, url)
         try row.set(Article.likesCount_key, likesCount)
         return row
@@ -77,7 +75,6 @@ extension Article: Preparation {
             builder.string(Article.title_key)
             builder.string(Article.itemID_key)
             builder.string(Article.publishedAt_key)
-            builder.string(Article.profileImageURL_key)
             builder.string(Article.url_key)
             builder.int(Article.likesCount_key)
         }
@@ -90,7 +87,6 @@ extension Article: Preparation {
 
 extension Article: JSONConvertible {
     convenience init(json: JSON) throws {
-        let user = try User(node: json["user"])
         let date: Date = try {
             let s: String = try json.get("created_at")
             let formatter = DateFormatter()
@@ -102,7 +98,6 @@ extension Article: JSONConvertible {
             title: json.get(Article.title_key),
             itemID: json.get("id"),
             publishedAt: date,
-            profileImageURL: user.profileImageURL,
             url: json.get(Article.url_key),
             likesCount: json.get(Article.likesCount_key)
         )
@@ -112,20 +107,11 @@ extension Article: JSONConvertible {
         var json = JSON()
         try json.set(Article.title_key, title)
         try json.set(Article.publishedAt_key, publishedAt)
-        try json.set(Article.profileImageURL_key, profileImageURL)
         try json.set(Article.url_key, url)
+        try json.set(Article.user_key, try user.first())
         try json.set(Article.tags_key, try tags.all().flatMap { t in t.name } )
         try json.set(Article.likesCount_key, likesCount)
         return json
-    }
-}
-
-
-final class User: NodeInitializable {
-    var profileImageURL: String
-    
-    init(node: Node) throws {
-        self.profileImageURL = try node.get(Article.profileImageURL_key)
     }
 }
 
