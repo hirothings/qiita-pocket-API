@@ -69,7 +69,7 @@ extension User: Preparation {
 extension User: JSONRepresentable {
     func makeJSON() throws -> JSON {
         var json = JSON()
-        try json.set(User.userID_key, self.userID)
+        try json.set("id", self.userID)
         try json.set(User.profileImageURL_key, self.profileImageURL)
         
         return json
