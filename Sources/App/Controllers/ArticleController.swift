@@ -67,7 +67,7 @@ final class ArticleController {
     
     func jobs(_ req: Request) throws -> ResponseRepresentable {
         Jobs.add(interval: .seconds(2)) {
-            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), profileImageURL: "test", url: "test", likesCount: 1)
+            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), url: "test", likesCount: 1)
             try! article.save()
         }
         return "success"
@@ -95,9 +95,21 @@ final class ArticleController {
     
     private func saveEntities(_ article: Article, json: JSON) {
         try! article.save()
-        guard let tags = json["tags"]?.array else {
+        guard
+            let tags = json["tags"]?.array,
+            let userJSON = json["user"]
+        else {
             return
         }
+        
+        // user
+        let user = try! User(
+            userID: userJSON.get("id"),
+            profileImageURL: userJSON.get(User.profileImageURL_key),
+            articleID: article.id!)
+        try! user.save()
+        
+        // tags
         tags.forEach { t in
             let name: String = try! t.get("name")
             let tag = Tag(name: name, articleID: article.id!)
