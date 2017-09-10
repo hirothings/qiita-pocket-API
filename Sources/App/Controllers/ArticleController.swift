@@ -78,6 +78,7 @@ final class ArticleController {
     }
     
     private func saveEntities(_ article: Article, json: JSON) {
+        // TODO: 重複を防ぐ
         try! article.save()
         guard
             let tags = json["tags"]?.array,
