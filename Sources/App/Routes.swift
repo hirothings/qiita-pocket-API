@@ -1,5 +1,4 @@
 import Vapor
-import RxSwift
 
 extension Droplet {
     func setupRoutes() throws {
@@ -7,6 +6,5 @@ extension Droplet {
         
         get("articles", handler: articles.index)
         post("articles", handler: articles.create)
-        get("jobs", handler: articles.jobs)
     }
 }
