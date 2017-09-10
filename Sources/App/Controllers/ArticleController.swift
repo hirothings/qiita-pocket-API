@@ -8,7 +8,6 @@
 
 import Vapor
 import HTTP
-import RxSwift
 import FluentProvider
 import Foundation
 import Jobs
@@ -22,15 +21,15 @@ final class ArticleController {
     
     let drop: Droplet
     let baseURL = "https://qiita.com/api/v2/"
-    let maxPage: Int = 1
-    let periodSec: RxTimeInterval = 5.0
+    let maxPage: Int = 100
+    let perPage: Int = 100
     var articles: [Article] = []
     
-    private var bag: DisposeBag! = DisposeBag()
     
     init(droplet: Droplet) {
         drop = droplet
     }
+    
     
     func index(_ req: Request) throws -> ResponseRepresentable {
         guard let _period = req.query?["period"]?.string, let period = Period(rawValue: _period) else {
@@ -47,30 +46,14 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        let interval = Observable<Int>.interval(periodSec, scheduler: SerialDispatchQueueScheduler(qos: .default))
-        
-        interval
-            .subscribe(onNext: {
-                let page = $0 + 1
+        Jobs.add(interval: .hours(1)) {
+            print(Date())
+            (1...100).forEach { page in
                 print("page: \(page)")
-                self.fetchArticles(page: page, perPage: 100)
-                if page == self.maxPage {
-                    print("complete")
-                    self.bag = nil
-                    self.bag = DisposeBag()
-                }
-            })
-            .disposed(by: bag)
-        
-        return "success"
-    }
-    
-    func jobs(_ req: Request) throws -> ResponseRepresentable {
-        Jobs.add(interval: .seconds(2)) {
-            let article = Article(title: "jobs", itemID: "test", publishedAt: Date(), url: "test", likesCount: 1)
-            try! article.save()
+                self.fetchArticles(page: page, perPage: self.perPage)
+            }
         }
-        return "success"
+        return "loading.."
     }
     
     
