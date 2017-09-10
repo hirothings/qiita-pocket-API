@@ -41,6 +41,7 @@ final class ArticleController {
         }
         return try articles
             .sort(Article.likesCount_key, .descending)
+            .limit(20, offset: 1)
             .all()
             .makeJSON()
     }
