@@ -119,7 +119,7 @@ final class ArticleController {
         
         return try Article
             .makeQuery()
-            .filter(raw: "published_at between '\(sinceStr)' and '\(nowStr)'")
+            .filter(raw: "created_at between '\(sinceStr)' and '\(nowStr)'")
     }
     
     private func searchArticles(with tag: String, articles: Query<Article>) throws -> Query<Article> {

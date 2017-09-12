@@ -55,3 +55,15 @@ extension Tag: Preparation {
         try database.delete(self)
     }
 }
+
+extension Tag: JSONRepresentable {
+    // Qiita APIの構造に合わせてDictionaryにする
+    func makeJSON() throws -> JSON {
+        var json = JSON()
+        try json.set("name", self.name)
+        
+        return json
+    }
+}
+
+
