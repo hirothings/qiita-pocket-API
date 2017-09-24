@@ -47,12 +47,10 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        var count = 1
-        Jobs.add(interval: .seconds(60)) {
-            (1...1).forEach { page in
-                count += 1
-                print("page: \(count)")
-                self.fetchArticles(page: count, perPage: self.perPage)
+        Jobs.add(interval: .days(1)) {
+            (1...100).forEach { page in
+                print("page: \(page)")
+                self.fetchArticles(page: page, perPage: self.perPage)
             }
         }
         return "loading.."
