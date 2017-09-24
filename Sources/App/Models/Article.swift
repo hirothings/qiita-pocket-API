@@ -98,6 +98,7 @@ extension Article: JSONConvertible {
     
     func makeJSON() throws -> JSON {
         var json = JSON()
+        try json.set("id", itemID)
         try json.set(Article.title_key, title)
         try json.set(Article.createdAt_key, createdAt)
         try json.set(Article.url_key, url)
