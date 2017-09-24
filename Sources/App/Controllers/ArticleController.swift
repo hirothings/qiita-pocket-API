@@ -73,14 +73,14 @@ final class ArticleController {
         }
         for json in jsonArray {
             let article = try! Article(json: json)
-            saveEntities(article, json: json)
+            Article.save(article)
+            saveEntities(itemID: article.itemID, json: json)
         }
     }
     
-    private func saveEntities(_ article: Article, json: JSON) {
-        // TODO: 重複を防ぐ
-        try! article.save()
+    private func saveEntities(itemID: String, json: JSON) {
         guard
+            let article = try! Article.makeQuery().filter(Article.itemID_key == itemID).first(),
             let tags = json["tags"]?.array,
             let userJSON = json["user"]
         else {
@@ -92,13 +92,14 @@ final class ArticleController {
             userID: userJSON.get("id"),
             profileImageURL: userJSON.get(User.profileImageURL_key),
             articleID: article.id!)
-        try! user.save()
+        User.save(user)
+
         
         // tags
         tags.forEach { t in
             let name: String = try! t.get("name")
             let tag = Tag(name: name, articleID: article.id!)
-            try! tag.save()
+            Tag.save(tag)
         }
     }
     

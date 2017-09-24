@@ -15,7 +15,7 @@ final class Article: Model {
     var storage: Storage = Storage()
     
     static let idType: IdentifierType = .int
-    let title: String
+    var title: String
     let itemID: String
     let createdAt: String
     let url: String
@@ -105,6 +105,19 @@ extension Article: JSONConvertible {
         try json.set(Article.tags_key, try tags.all())
         try json.set(Article.likesCount_key, likesCount)
         return json
+    }
+}
+
+extension Article {
+    static func save(_ article: Article) {
+        if let existedArticle = try! Article.makeQuery().filter(Article.itemID_key == article.itemID).first() {
+            existedArticle.title = article.title
+            existedArticle.likesCount = article.likesCount
+            try! existedArticle.save()
+        }
+        else {
+            try! article.save()
+        }
     }
 }
 

@@ -75,3 +75,14 @@ extension User: JSONRepresentable {
         return json
     }
 }
+
+extension User {
+    static func save(_ user: User) {
+        if let _ = try! User.makeQuery().filter(User.articleID_key == user.articleID).first() {
+            return
+        }
+        else {
+            try! user.save()
+        }
+    }
+}

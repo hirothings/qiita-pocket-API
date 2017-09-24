@@ -66,4 +66,19 @@ extension Tag: JSONRepresentable {
     }
 }
 
-
+extension Tag {
+    static func save(_ tag: Tag) {
+        do {
+            let existedTags = try Tag.makeQuery().filter(Tag.articleID_key == tag.articleID).all()
+            for t in existedTags {
+                if t.name == tag.name {
+                    return
+                }
+            }
+            try! tag.save()
+        }
+        catch {
+            try! tag.save()
+        }
+    }
+}
