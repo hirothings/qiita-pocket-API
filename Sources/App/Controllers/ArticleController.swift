@@ -10,7 +10,6 @@ import Vapor
 import HTTP
 import FluentProvider
 import Foundation
-import Jobs
 
 enum Period: String {
     case week
@@ -47,11 +46,9 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        Jobs.add(interval: .days(1)) {
-            (1...100).forEach { page in
-                print("page: \(page)")
-                self.fetchArticles(page: page, perPage: self.perPage)
-            }
+        (1...100).forEach { page in
+            print("page: \(page)")
+            self.fetchArticles(page: page, perPage: self.perPage)
         }
         return "loading.."
     }
