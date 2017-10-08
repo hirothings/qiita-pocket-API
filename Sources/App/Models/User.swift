@@ -77,12 +77,12 @@ extension User: JSONRepresentable {
 }
 
 extension User {
-    static func save(_ user: User) {
-        if let _ = try! User.makeQuery().filter(User.articleID_key == user.articleID).first() {
+    static func save(_ user: User) throws {
+        if let _ = try User.makeQuery().filter(User.articleID_key == user.articleID).first() {
             return
         }
         else {
-            try! user.save()
+            try user.save()
         }
     }
 }

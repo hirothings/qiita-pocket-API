@@ -110,14 +110,14 @@ extension Article: JSONConvertible {
 }
 
 extension Article {
-    static func save(_ article: Article) {
-        if let existedArticle = try! Article.makeQuery().filter(Article.itemID_key == article.itemID).first() {
+    static func save(_ article: Article) throws {
+        if let existedArticle = try Article.makeQuery().filter(Article.itemID_key == article.itemID).first() {
             existedArticle.title = article.title
             existedArticle.likesCount = article.likesCount
-            try! existedArticle.save()
+            try existedArticle.save()
         }
         else {
-            try! article.save()
+            try article.save()
         }
     }
 }

@@ -67,7 +67,7 @@ extension Tag: JSONRepresentable {
 }
 
 extension Tag {
-    static func save(_ tag: Tag) {
+    static func save(_ tag: Tag) throws {
         do {
             let existedTags = try Tag.makeQuery().filter(Tag.articleID_key == tag.articleID).all()
             for t in existedTags {
@@ -75,10 +75,10 @@ extension Tag {
                     return
                 }
             }
-            try! tag.save()
+            try tag.save()
         }
         catch {
-            try! tag.save()
+            try tag.save()
         }
     }
 }

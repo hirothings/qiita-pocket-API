@@ -46,9 +46,14 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        (1...100).forEach { page in
+        try (1...100).forEach { page throws in
             print("page: \(page)")
-            self.fetchArticles(page: page, perPage: self.perPage)
+            do {
+                try self.fetchArticles(page: page, perPage: self.perPage)
+            }
+            catch {
+                drop.log.error(error)
+            }
         }
         return "loading.."
     }
@@ -56,8 +61,8 @@ final class ArticleController {
     
     // MARK: - private
     
-    private func fetchArticles(page: Int, perPage: Int) {
-        let response: Response = try! drop.client.get(baseURL + "items", query: [
+    private func fetchArticles(page: Int, perPage: Int) throws {
+        let response: Response = try drop.client.get(baseURL + "items", query: [
             "page": page,
             "per_page": perPage
         ], [
@@ -68,15 +73,15 @@ final class ArticleController {
             return
         }
         for json in jsonArray {
-            let article = try! Article(json: json)
-            Article.save(article)
-            saveEntities(itemID: article.itemID, json: json)
+            let article = try Article(json: json)
+            try Article.save(article)
+            try saveEntities(itemID: article.itemID, json: json)
         }
     }
     
-    private func saveEntities(itemID: String, json: JSON) {
+    private func saveEntities(itemID: String, json: JSON) throws {
         guard
-            let article = try! Article.makeQuery().filter(Article.itemID_key == itemID).first(),
+            let article = try Article.makeQuery().filter(Article.itemID_key == itemID).first(),
             let tags = json["tags"]?.array,
             let userJSON = json["user"]
         else {
@@ -84,18 +89,18 @@ final class ArticleController {
         }
         
         // user
-        let user = try! User(
+        let user = try User(
             userID: userJSON.get("id"),
             profileImageURL: userJSON.get(User.profileImageURL_key),
             articleID: article.id!)
-        User.save(user)
+        try User.save(user)
 
         
         // tags
-        tags.forEach { t in
-            let name: String = try! t.get("name")
+        try tags.forEach { t throws in
+            let name: String = try t.get("name")
             let tag = Tag(name: name, articleID: article.id!)
-            Tag.save(tag)
+            try Tag.save(tag)
         }
     }
     
