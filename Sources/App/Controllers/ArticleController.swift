@@ -130,6 +130,29 @@ final class ArticleController {
             .join(Tag.self) // 子ModelのTagとJoin
             .filter(raw: "upper(`tags`.`name`) = upper('\(tag)')") // 大文字・個別の区別をなくすためにsqliteのupper関数を使う
     }
+    
+    private func deleteOldArticles() throws {
+        let oldArticles = try Article
+            .makeQuery()
+            .sort(Article.idKey, .descending)
+            .limit(200)
+            .all()
+        try oldArticles.forEach { article throws in
+            guard let articleID = article.id else { return }
+            if let tags = try? Tag.makeQuery().filter(Tag.articleID_key, articleID).all() {
+                try tags.forEach({ tag in
+                    try tag.delete()
+                })
+            }
+            if let users = try? User.makeQuery().filter(User.articleID_key, articleID).all() {
+                try users.forEach({ user in
+                    try user.delete()
+                })
+            }
+            
+            try article.delete()
+        }
+    }
 }
 
 
