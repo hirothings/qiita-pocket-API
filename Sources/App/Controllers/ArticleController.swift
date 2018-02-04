@@ -48,13 +48,9 @@ final class ArticleController {
     func create(_ req: Request) throws -> ResponseRepresentable {
         try (1...100).forEach { page throws in
             print("page: \(page)")
-            do {
-                try self.fetchArticles(page: page, perPage: self.perPage)
-            }
-            catch {
-                drop.log.error(error)
-            }
+            try self.fetchArticles(page: page, perPage: self.perPage)
         }
+        try deleteOldArticles()
         return "loading.."
     }
     
