@@ -22,6 +22,7 @@ final class ArticleController {
     let baseURL = "https://qiita.com/api/v2/"
     let maxPage: Int = 100
     let perPage: Int = 100
+    let articlesLimit: Int = 20000
     var articles: [Article] = []
     
     
@@ -46,11 +47,14 @@ final class ArticleController {
     }
     
     func create(_ req: Request) throws -> ResponseRepresentable {
-        try (1...100).forEach { page throws in
+        try (1...maxPage).forEach { page throws in
             print("page: \(page)")
             try self.fetchArticles(page: page, perPage: self.perPage)
         }
-        try deleteOldArticles()
+        let articles = try Article.all()
+        if articles.count >= articlesLimit {
+            try deleteOldArticles()
+        }
         return "loading.."
     }
     
@@ -131,7 +135,7 @@ final class ArticleController {
         let oldArticles = try Article
             .makeQuery()
             .sort(Article.idKey, .descending)
-            .limit(200)
+            .limit(articlesLimit / 2)
             .all()
         try oldArticles.forEach { article throws in
             guard let articleID = article.id else { return }
